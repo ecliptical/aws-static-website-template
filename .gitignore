@@ -1,0 +1,4 @@
+node_modules/
+infra/dist/
+infra/cdk.out/
+.DS_Store

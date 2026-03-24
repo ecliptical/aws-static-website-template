@@ -14,8 +14,7 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ca-central-1
-  S3_BUCKET: www.eclipticalsoftware.com
+  AWS_REGION: us-east-1
 
 jobs:
   deploy:
@@ -33,18 +32,18 @@ jobs:
 
       - name: Sync to S3
         run: |
-          aws s3 sync docs/ s3://${{ env.S3_BUCKET }}/ --delete
+          aws s3 sync docs/ s3://${{ vars.S3_BUCKET }}/ --delete
 
       - name: Invalidate CloudFront cache
         if: ${{ inputs.invalidate_cache }}
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
 
       - name: Deployment summary
         run: |
           echo "## Deployment Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **S3 Bucket**: ${{ env.S3_BUCKET }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Bucket**: ${{ vars.S3_BUCKET }}" >> $GITHUB_STEP_SUMMARY
           echo "- **CloudFront Invalidation**: ${{ inputs.invalidate_cache }}" >> $GITHUB_STEP_SUMMARY
