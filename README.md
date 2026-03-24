@@ -7,7 +7,7 @@ An **example static website** demonstrating how to deploy a simple HTML site to 
 This repository serves as a reference for static website deployment patterns, showcasing:
 - Static website hosting on **AWS S3 + CloudFront**
 - **GitHub Actions** workflow for automated deployment (OIDC-based AWS authentication)
-- **GitHub Pages** as an alternative deployment target
+- **GitHub Pages** as an optional alternative deployment target
 - **React 18** minimal frontend
 
 ## 📁 Repository Structure
@@ -25,10 +25,6 @@ This repository serves as a reference for static website deployment patterns, sh
 ```
 
 ## 🚀 Deployment
-
-### GitHub Pages
-
-If configured, the site deploys automatically from the `/docs` folder on push.
 
 ### AWS (S3 + CloudFront)
 
@@ -50,6 +46,19 @@ The GitHub Action uses OIDC federation for secure, secretless authentication wit
 |--------|-------------|
 | `AWS_ROLE_ARN` | IAM role ARN for OIDC authentication |
 | `CLOUDFRONT_DISTRIBUTION_ID` | CloudFront distribution to invalidate |
+
+### GitHub Pages (Optional)
+
+This site can optionally be published via GitHub Pages since the web assets live in the `docs/` directory. To set it up:
+
+1. Go to **Settings → Pages** in your GitHub repository
+2. Under **Source**, select **Deploy from a branch**
+3. Set the branch to `main` (or your default branch) and the folder to `/docs`
+4. Click **Save**
+
+Once configured, GitHub Pages will automatically publish the contents of `docs/` on every push to the selected branch. Your site will be available at `https://<owner>.github.io/<repo>/`.
+
+> **Note:** GitHub Pages deployment is independent of the AWS deployment. You can use one or both.
 
 ## 📄 License
 

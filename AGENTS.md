@@ -1,13 +1,13 @@
 # AGENTS.md - Example Static Website
 
 ## Overview
-This repository is an **example static website** that demonstrates deploying a simple HTML site to AWS using S3 and CloudFront, with GitHub Pages as an alternative hosting option. It serves as a reference for static website deployment patterns.
+This repository is an **example static website** that demonstrates deploying a simple HTML site to AWS using S3 and CloudFront. GitHub Pages can optionally be configured as an alternative hosting option. It serves as a reference for static website deployment patterns.
 
 ## Purpose
 This is a demonstration/example repository — not a production company website. It showcases:
 - Static website hosting on AWS S3 + CloudFront
 - GitHub Actions workflow for automated deployment
-- GitHub Pages as an alternative deployment target
+- GitHub Pages as an optional alternative deployment target (requires manual setup)
 - React 18 minimal frontend
 
 ## AWS Infrastructure
@@ -36,7 +36,7 @@ This is a demonstration/example repository — not a production company website.
 
 ## Technology Stack
 - **Frontend**: React 18 (CDN-hosted via unpkg)
-- **Hosting**: AWS S3 + CloudFront, GitHub Pages
+- **Hosting**: AWS S3 + CloudFront (GitHub Pages available as optional alternative)
 - **CI/CD**: GitHub Actions with OIDC-based AWS authentication
 
 ## Development Guidelines
@@ -45,7 +45,7 @@ This is a demonstration/example repository — not a production company website.
 To deploy changes to the website:
 
 1. **Update local files** in this repository
-2. **Push to GitHub** — If GitHub Pages is configured, the site is available immediately
+2. **Push to GitHub** — If GitHub Pages has been configured (see README), the site updates automatically on push
 3. **Deploy to AWS** — Use the "Deploy to AWS" GitHub Action (manual trigger) or run locally:
    ```bash
    aws s3 sync docs/ s3://$S3_BUCKET/
@@ -68,4 +68,5 @@ When collaborating with AI agents on this website:
 ## Notes
 - The website uses CDN-hosted React 18 (via unpkg)
 - The S3 bucket is not configured for direct website hosting; CloudFront handles all requests
-- GitHub Pages provides an alternative access point (updates immediately on push)
+- GitHub Pages can optionally be configured as an alternative hosting target — see the README for setup instructions
+- There is no automated GitHub Pages deployment workflow; it relies on GitHub's built-in Pages feature (Settings → Pages)
