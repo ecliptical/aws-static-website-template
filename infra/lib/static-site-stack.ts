@@ -7,6 +7,8 @@ import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cr from 'aws-cdk-lib/custom-resources';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
 export interface StaticSiteStackProps extends cdk.StackProps {
   domainName?: string;
@@ -60,6 +62,14 @@ export class StaticSiteStack extends cdk.Stack {
         : {}),
     });
 
+    // Deploy site content from docs/ directory
+    new s3deploy.BucketDeployment(this, 'DeploySite', {
+      sources: [s3deploy.Source.asset('../docs')],
+      destinationBucket: siteBucket,
+      distribution,
+      distributionPaths: ['/*'],
+    });
+
     // Route 53 alias records (only when using Route 53 for DNS)
     if (hostedZone && props.domainName) {
       new route53.ARecord(this, 'SiteAliasRecord', {
@@ -81,10 +91,32 @@ export class StaticSiteStack extends cdk.Stack {
 
     // GitHub Actions OIDC provider and deploy role
     if (props.githubRepo) {
-      const oidcProvider = new iam.OpenIdConnectProvider(this, 'GitHubOidc', {
-        url: 'https://token.actions.githubusercontent.com',
-        clientIds: ['sts.amazonaws.com'],
+      const githubOidcProviderArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`;
+
+      // Ensure the GitHub OIDC provider exists (idempotent — skips if already present)
+      new cr.AwsCustomResource(this, 'EnsureGitHubOidc', {
+        onCreate: {
+          service: 'IAM',
+          action: 'CreateOpenIDConnectProvider',
+          parameters: {
+            Url: 'https://token.actions.githubusercontent.com',
+            ClientIDList: ['sts.amazonaws.com'],
+            ThumbprintList: ['6938fd4d98bab03faadb97b34396831e3780aea1'],
+          },
+          physicalResourceId: cr.PhysicalResourceId.of(githubOidcProviderArn),
+          ignoreErrorCodesMatching: 'EntityAlreadyExists',
+        },
+        policy: cr.AwsCustomResourcePolicy.fromStatements([
+          new iam.PolicyStatement({
+            actions: ['iam:CreateOpenIDConnectProvider'],
+            resources: ['*'],
+          }),
+        ]),
       });
+
+      const oidcProvider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+        this, 'GitHubOidc', githubOidcProviderArn,
+      );
 
       const deployRole = new iam.Role(this, 'GitHubActionsDeployRole', {
         assumedBy: new iam.WebIdentityPrincipal(
@@ -101,12 +133,11 @@ export class StaticSiteStack extends cdk.Stack {
         description: 'Role for GitHub Actions to deploy static site',
       });
 
-      siteBucket.grantReadWrite(deployRole);
       deployRole.addToPolicy(
         new iam.PolicyStatement({
-          actions: ['cloudfront:CreateInvalidation'],
+          actions: ['sts:AssumeRole'],
           resources: [
-            `arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`,
+            `arn:aws:iam::${this.account}:role/cdk-hnb659fds-*-role-${this.account}-${this.region}`,
           ],
         }),
       );
@@ -120,12 +151,12 @@ export class StaticSiteStack extends cdk.Stack {
     // Stack outputs
     new cdk.CfnOutput(this, 'BucketName', {
       value: siteBucket.bucketName,
-      description: 'S3 bucket name (set as S3_BUCKET variable in GitHub)',
+      description: 'S3 bucket name',
     });
 
     new cdk.CfnOutput(this, 'DistributionId', {
       value: distribution.distributionId,
-      description: 'CloudFront distribution ID (set as CLOUDFRONT_DISTRIBUTION_ID variable in GitHub)',
+      description: 'CloudFront distribution ID',
     });
 
     new cdk.CfnOutput(this, 'DistributionDomainName', {

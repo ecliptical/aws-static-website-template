@@ -30,7 +30,7 @@ The CDK stack (`infra/lib/static-site-stack.ts`) provisions:
 
 ### Created When `githubRepo` Is Set
 - **GitHub OIDC Provider**: For secretless GitHub Actions authentication
-- **IAM Deploy Role**: Grants S3 read/write and CloudFront invalidation permissions
+- **IAM Deploy Role**: Grants permission to assume CDK bootstrap roles for deployment
 
 ### CDK Configuration
 Settings are in `infra/cdk.json` context:
@@ -40,8 +40,8 @@ Settings are in `infra/cdk.json` context:
 - `certificateArn`: Pre-existing ACM certificate ARN
 
 ### Stack Outputs
-- `BucketName`: S3 bucket name → GitHub variable `S3_BUCKET`
-- `DistributionId`: CloudFront distribution ID → GitHub variable `CLOUDFRONT_DISTRIBUTION_ID`
+- `BucketName`: S3 bucket name
+- `DistributionId`: CloudFront distribution ID
 - `DistributionDomainName`: CloudFront domain
 - `DeployRoleArn`: IAM role ARN → GitHub secret `AWS_ROLE_ARN`
 - `SiteUrl`: Website URL (if custom domain configured)
@@ -50,9 +50,11 @@ Settings are in `infra/cdk.json` context:
 ```
 /
 ├── .github/
+│   ├── dependabot.yml               # Dependabot configuration
 │   └── workflows/
-│       └── deploy-aws.yml          # GitHub Action for content deployment
+│       └── deploy-aws.yml           # GitHub Action for content deployment
 ├── docs/                            # Website content (deployed to S3)
+│   ├── favicon.svg                  # Site favicon
 │   └── index.html                   # Main landing page
 ├── infra/                           # AWS CDK infrastructure
 │   ├── bin/app.ts                   # CDK app entry point
@@ -60,6 +62,7 @@ Settings are in `infra/cdk.json` context:
 │   ├── cdk.json                     # CDK configuration
 │   ├── package.json
 │   └── tsconfig.json
+├── .gitignore
 ├── AGENTS.md                        # This file
 ├── LICENSE                          # Proprietary license
 └── README.md                        # Repository documentation
@@ -84,15 +87,14 @@ Settings are in `infra/cdk.json` context:
 2. **Push to GitHub** — If GitHub Pages has been configured (see README), the site updates automatically on push
 3. **Deploy to AWS** — Use the "Deploy to AWS" GitHub Action (manual trigger) or run locally:
    ```bash
-   aws s3 sync docs/ s3://$S3_BUCKET/ --delete
-   aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+   cd infra && npx cdk deploy --require-approval never
    ```
 
 ### GitHub Actions
-- **Deploy to AWS** (`deploy-aws.yml`): Manual workflow for deploying content to S3 and invalidating CloudFront cache
+- **Deploy to AWS** (`deploy-aws.yml`): Manual workflow that runs `cdk deploy` to deploy content and infrastructure
   - Uses OIDC federation for secure, secretless AWS authentication
   - Secret: `AWS_ROLE_ARN`
-  - Variables: `S3_BUCKET`, `CLOUDFRONT_DISTRIBUTION_ID`
+  - CDK `BucketDeployment` handles S3 sync and CloudFront cache invalidation automatically
 
 ## Working with AI Agents
 When collaborating with AI agents on this website:
@@ -109,4 +111,4 @@ When collaborating with AI agents on this website:
 - The S3 bucket has a RETAIN removal policy — it won't be deleted on `cdk destroy`
 - GitHub Pages can optionally be configured as an alternative hosting target — see the README for setup instructions
 - There is no automated GitHub Pages deployment workflow; it relies on GitHub's built-in Pages feature (Settings → Pages)
-- The GitHub OIDC provider is account-wide; if one already exists, remove `githubRepo` from context and create the IAM role manually
+- The GitHub OIDC provider creation is idempotent; if one already exists in the account, it will be reused automatically

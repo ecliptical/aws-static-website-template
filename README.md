@@ -24,16 +24,19 @@ A starter template for deploying a static website to AWS using S3 and CloudFront
 1. **Use this template** — Click "Use this template" on GitHub, or clone the repository
 2. **Configure** — Edit `infra/cdk.json` context with your settings (see [Configuration](#configuration))
 3. **Deploy infrastructure** — `cd infra && npm install && cdk deploy`
-4. **Set GitHub secrets/variables** — Copy CDK outputs into your repository settings (see [GitHub Actions Setup](#github-actions-setup))
+4. **Set GitHub secret** — Copy the `DeployRoleArn` CDK output into your repository settings (see [GitHub Actions Setup](#github-actions-setup))
 5. **Deploy content** — Push to GitHub and run the "Deploy to AWS" action
 
 ## 📁 Repository Structure
 
 ```
 /
-├── .github/workflows/
-│   └── deploy-aws.yml          # GitHub Action for content deployment
+├── .github/
+│   ├── dependabot.yml           # Dependabot configuration
+│   └── workflows/
+│       └── deploy-aws.yml       # GitHub Action for content deployment
 ├── docs/                        # Website content (deployed to S3)
+│   ├── favicon.svg              # Site favicon
 │   └── index.html               # Main landing page
 ├── infra/                       # AWS CDK infrastructure
 │   ├── bin/app.ts               # CDK app entry point
@@ -41,6 +44,7 @@ A starter template for deploying a static website to AWS using S3 and CloudFront
 │   ├── cdk.json                 # CDK configuration
 │   ├── package.json
 │   └── tsconfig.json
+├── .gitignore
 ├── AGENTS.md
 ├── LICENSE
 └── README.md
@@ -96,10 +100,9 @@ CDK will output the values needed for GitHub Actions:
 | CDK Output | Set in GitHub as |
 |------------|-----------------|
 | `DeployRoleArn` | Secret: `AWS_ROLE_ARN` |
-| `BucketName` | Variable: `S3_BUCKET` |
-| `DistributionId` | Variable: `CLOUDFRONT_DISTRIBUTION_ID` |
 
-> **Note:** The stack creates a GitHub OIDC identity provider in your AWS account. If you already have one (from another project), the deploy will fail. In that case, remove the `githubRepo` context value, deploy without it, and create the IAM role manually referencing your existing OIDC provider.
+
+> **Note:** The stack creates a GitHub OIDC identity provider in your AWS account if one doesn't already exist. If a provider is already present (from another project), it will be reused automatically.
 
 ### Custom Domain Setup
 
@@ -143,15 +146,13 @@ After running `cdk deploy`, configure your GitHub repository:
 
 1. Go to **Settings → Secrets and variables → Actions**
 2. Add a **Repository secret**: `AWS_ROLE_ARN` (from CDK output `DeployRoleArn`)
-3. Add **Repository variables**: `S3_BUCKET` and `CLOUDFRONT_DISTRIBUTION_ID` (from CDK outputs)
 
 Then go to **Actions → Deploy to AWS → Run workflow** to deploy content.
 
 ### Via CLI
 
 ```bash
-aws s3 sync docs/ s3://YOUR_BUCKET_NAME/ --delete
-aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
+cd infra && npx cdk deploy --require-approval never
 ```
 
 ## GitHub Pages (Optional)
