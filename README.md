@@ -1,30 +1,170 @@
 # Static Website Starter Template
 
-A starter template for deploying a static website to AWS using S3 and CloudFront, provisioned with AWS CDK (TypeScript).
+A starter template for deploying a static website to [AWS](https://aws.amazon.com/) using [S3](https://aws.amazon.com/s3/) and [CloudFront](https://aws.amazon.com/cloudfront/), provisioned with [AWS CDK](https://aws.amazon.com/cdk/) ([TypeScript](https://www.typescriptlang.org/)).
 
 ## Features
 
 - **AWS S3 + CloudFront** for global static site hosting
 - **AWS CDK** (TypeScript) for infrastructure as code
-- **Custom domain** support with ACM TLS certificates
-- **Route 53** integration for DNS management (optional)
-- **GitHub Actions** workflow with OIDC authentication for automated deployment
-- **GitHub Pages** as an optional alternative deployment target
-- **React 18** minimal frontend example
+- **Custom domain** support with [ACM](https://aws.amazon.com/certificate-manager/) [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) certificates
+- **[Route 53](https://aws.amazon.com/route53/)** integration for [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) management (optional)
+- **[GitHub Actions](https://docs.github.com/en/actions)** workflow with [OIDC](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/about-security-hardening-with-openid-connect) authentication for automated deployment
+- **[GitHub Pages](https://pages.github.com/)** as an optional alternative deployment target
+- **[React](https://react.dev/) 18** minimal frontend example
+
+## Architecture
+
+Your website files live in the `docs/` directory. When you push changes to GitHub, a GitHub Actions workflow uses **AWS CDK** to deploy them to a private **S3 bucket**. A **CloudFront** [CDN](https://en.wikipedia.org/wiki/Content_delivery_network) distribution sits in front of S3, serving your site to users over [HTTPS](https://en.wikipedia.org/wiki/HTTPS) with low latency worldwide. GitHub Actions authenticates to AWS securely via **OIDC** — no long-lived access keys needed.
+
+Optionally, you can attach a **custom domain** with a TLS certificate from **ACM**, and use **Route 53** for DNS. **GitHub Pages** is also available as a simpler alternative or secondary hosting option.
+
+```mermaid
+flowchart LR
+    Developer["Developer"]
+    GH["GitHub Repository"]
+    GHA["GitHub Actions"]
+    GHP["GitHub Pages<br/>(optional)"]
+
+    subgraph AWS
+        IAM["IAM OIDC<br/>Provider + Role"]
+        CDK["AWS CDK"]
+        S3["S3 Bucket<br/>(private)"]
+        CF["CloudFront<br/>Distribution"]
+        ACM["ACM Certificate<br/>(optional)"]
+        R53["Route 53<br/>(optional)"]
+    end
+
+    Users["Users"]
+
+    Developer -- "git push" --> GH
+    GH -- "workflow trigger" --> GHA
+    GH -. "GitHub Pages<br/>(optional)" .-> GHP
+    GHA -- "OIDC auth" --> IAM
+    IAM -- "assume role" --> CDK
+    CDK -- "deploy content" --> S3
+    CDK -- "create/update" --> CF
+    CDK -. "provision cert" .-> ACM
+    CDK -. "manage DNS" .-> R53
+    ACM -. "TLS" .-> CF
+    R53 -. "alias record" .-> CF
+    CF -- "OAC" --> S3
+    Users -- "HTTPS" --> CF
+    Users -. "HTTPS" .-> GHP
+```
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (v18 or later)
-- [AWS CLI](https://aws.amazon.com/cli/) configured with credentials
-- [AWS CDK CLI](https://docs.aws.amazon.com/cdk/latest/guide/cli.html): `npm install -g aws-cdk`
-- An AWS account with CDK bootstrapped: `cdk bootstrap aws://ACCOUNT-ID/us-east-1`
+This guide assumes you're on **macOS**. Install each tool in order — later steps depend on earlier ones.
+
+### 1. Homebrew (macOS package manager)
+
+[Homebrew](https://brew.sh/) is used to install most of the tools below. Open **Terminal** (found in Applications → Utilities) and run:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Follow the on-screen instructions. After installation, verify it works:
+
+```bash
+brew --version
+```
+
+### 2. Git
+
+Git is the version control system used to manage this repository. macOS includes Git via Xcode Command Line Tools, but you can also install it via Homebrew:
+
+```bash
+brew install git
+```
+
+Configure your identity (use the email associated with your GitHub account):
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+```
+
+### 3. GitHub account and GitHub CLI
+
+You'll need a free [GitHub account](https://github.com/signup) to use this template and deploy via GitHub Actions.
+
+The [GitHub CLI](https://cli.github.com/) (`gh`) is used by the included helper script to set deployment secrets. Install and authenticate:
+
+```bash
+brew install gh
+gh auth login
+```
+
+Follow the prompts to authenticate with your GitHub account.
+
+### 4. Node.js
+
+[Node.js](https://nodejs.org/) (v18 or later) is required to run AWS CDK. Install it via Homebrew:
+
+```bash
+brew install node
+```
+
+Verify the installation:
+
+```bash
+node --version   # should print v18 or later
+npm --version
+```
+
+### 5. AWS account and AWS CLI
+
+You'll need an [AWS account](https://aws.amazon.com/free/) — the free tier covers most resources used by this template.
+
+Install the [AWS CLI](https://aws.amazon.com/cli/) and configure it with your credentials:
+
+```bash
+brew install awscli
+aws configure
+```
+
+`aws configure` will prompt you for:
+
+| Prompt | Value |
+|--------|-------|
+| AWS Access Key ID | From the IAM console (see below) |
+| AWS Secret Access Key | From the IAM console (see below) |
+| Default region name | `us-east-1` |
+| Default output format | `json` |
+
+To create access keys: open the [IAM console](https://console.aws.amazon.com/iam/) → **Users** → select your user → **Security credentials** → **Create access key**.
+
+### 6. AWS CDK CLI
+
+The [AWS CDK CLI](https://docs.aws.amazon.com/cdk/latest/guide/cli.html) is the command-line tool for deploying infrastructure:
+
+```bash
+npm install -g aws-cdk
+```
+
+Verify:
+
+```bash
+cdk --version
+```
+
+### 7. Bootstrap AWS CDK
+
+CDK requires a one-time bootstrap step per AWS account/region. Replace `ACCOUNT-ID` with your [12-digit AWS account ID](https://docs.aws.amazon.com/IAM/latest/UserGuide/console_account-alias.html):
+
+```bash
+cdk bootstrap aws://ACCOUNT-ID/us-east-1
+```
+
+You can find your account ID by running `aws sts get-caller-identity`.
 
 ## Quick Start
 
 1. **Use this template** — Click "Use this template" on GitHub, or clone the repository
 2. **Configure** — Edit `infra/cdk.json` context with your settings (see [Configuration](#configuration))
 3. **Deploy infrastructure** — `cd infra && npm install && cdk deploy`
-4. **Set GitHub secret** — Copy the `DeployRoleArn` CDK output into your repository settings (see [GitHub Actions Setup](#github-actions-setup))
+4. **Set GitHub secret** — Run `cd infra && ./setup-github-secret.sh` or manually copy `DeployRoleArn` (see [GitHub Actions Setup](#github-actions-setup))
 5. **Deploy content** — Push to GitHub and run the "Deploy to AWS" action
 
 ## 📁 Repository Structure
@@ -130,7 +270,7 @@ If you prefer to manage DNS entirely outside of AWS:
 1. **Create an ACM certificate** in the [ACM console](https://console.aws.amazon.com/acm/) (**must be in us-east-1**)
    - Request a public certificate for your domain
    - Choose DNS validation
-   - Add the provided CNAME record at your DNS provider
+   - Add the provided [CNAME](https://en.wikipedia.org/wiki/CNAME_record) record at your DNS provider
    - Wait for validation to complete
 2. **Configure CDK** — Set `domainName` and `certificateArn` in `infra/cdk.json`
 3. **Deploy** — Run `cdk deploy`
@@ -142,7 +282,17 @@ If you prefer to manage DNS entirely outside of AWS:
 
 ### GitHub Actions Setup
 
-After running `cdk deploy`, configure your GitHub repository:
+After running `cdk deploy`, configure your GitHub repository with the deploy role:
+
+**Option A: Automated (recommended)**
+
+```bash
+cd infra && ./setup-github-secret.sh
+```
+
+This reads the `DeployRoleArn` from the [CloudFormation](https://aws.amazon.com/cloudformation/) stack and sets it as the `AWS_ROLE_ARN` GitHub secret automatically. Requires the [GitHub CLI](https://cli.github.com/) (`gh`) to be installed and authenticated.
+
+**Option B: Manual**
 
 1. Go to **Settings → Secrets and variables → Actions**
 2. Add a **Repository secret**: `AWS_ROLE_ARN` (from CDK output `DeployRoleArn`)
