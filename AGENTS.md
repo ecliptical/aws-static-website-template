@@ -28,13 +28,13 @@ The CDK stack (`infra/lib/static-site-stack.ts`) provisions:
 ### Created When `domainName` + `certificateArn` Are Set
 - CloudFront configured with the custom domain and pre-existing certificate
 
-### Created When `githubRepo` Is Set
+### Created When GitHub Repo Is Detected
+The GitHub repo (`owner/repo`) is auto-detected from the `origin` Git remote at synth time.
 - **GitHub OIDC Provider**: For secretless GitHub Actions authentication
 - **IAM Deploy Role**: Grants permission to assume CDK bootstrap roles for deployment
 
 ### CDK Configuration
 Settings are in `infra/cdk.json` context:
-- `githubRepo`: GitHub repo (`owner/repo`) for OIDC role
 - `domainName`: Custom domain (e.g., `www.example.com`)
 - `hostedZoneName`: Route 53 hosted zone (e.g., `example.com`)
 - `certificateArn`: Pre-existing ACM certificate ARN

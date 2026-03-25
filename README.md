@@ -198,7 +198,6 @@ Edit `infra/cdk.json` to set your configuration in the `context` section:
 
 | Setting | Required | Description |
 |---------|----------|-------------|
-| `githubRepo` | Recommended | Your GitHub repo (`owner/repo`) for OIDC deployment role |
 | `domainName` | No | Custom domain (e.g., `www.example.com`) |
 | `hostedZoneName` | No | Route 53 hosted zone (e.g., `example.com`); enables automatic cert validation and DNS records |
 | `certificateArn` | No | Pre-existing ACM certificate ARN (alternative to Route 53 for custom domain) |
@@ -208,19 +207,8 @@ Example with a custom domain and Route 53:
 ```json
 {
   "context": {
-    "githubRepo": "your-org/your-repo",
     "domainName": "www.example.com",
     "hostedZoneName": "example.com"
-  }
-}
-```
-
-Example without a custom domain:
-
-```json
-{
-  "context": {
-    "githubRepo": "your-org/your-repo"
   }
 }
 ```
