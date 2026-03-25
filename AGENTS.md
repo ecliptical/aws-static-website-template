@@ -64,7 +64,7 @@ Settings are in `infra/cdk.json` context:
 │   └── tsconfig.json
 ├── .gitignore
 ├── AGENTS.md                        # This file
-├── LICENSE                          # Proprietary license
+├── LICENSE                          # MIT license
 └── README.md                        # Repository documentation
 ```
 

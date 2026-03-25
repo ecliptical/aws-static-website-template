@@ -308,4 +308,6 @@ The site will be available at `https://<owner>.github.io/<repo>/` and updates au
 
 ## 📄 License
 
-This project is proprietary software. See [LICENSE](LICENSE) for details.
+This template is licensed under the [MIT License](LICENSE).
+
+**When you create a project from this template, you are free to replace the license with one of your own choosing** — including proprietary licenses. The MIT license permits this explicitly. Simply replace the contents of the `LICENSE` file (and update any license references) to reflect the terms you want for your project.
