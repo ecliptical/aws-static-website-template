@@ -229,6 +229,7 @@ CDK will output the values needed for GitHub Actions:
 |------------|-----------------|
 | `DeployRoleArn` | Secret: `AWS_ROLE_ARN` |
 
+Save this value as a GitHub repository secret so the deployment workflow can authenticate to AWS. See [GitHub Actions Setup](#github-actions-setup) for instructions.
 
 > **Note:** The stack creates a GitHub OIDC identity provider in your AWS account if one doesn't already exist. If a provider is already present (from another project), it will be reused automatically.
 
