@@ -3,6 +3,7 @@
   "context": {
     "domainName": "",
     "hostedZoneName": "",
-    "certificateArn": ""
+    "certificateArn": "",
+    "@aws-cdk/customresources:installLatestAwsSdkDefault": false
   }
 }
