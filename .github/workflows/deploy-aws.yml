@@ -16,7 +16,7 @@ env:
 
 jobs:
   deploy:
-    if: github.repository != 'ecliptical/static-website-template'
+    if: github.repository != 'ecliptical/aws-static-website-template'
     runs-on: ubuntu-latest
 
     steps:
