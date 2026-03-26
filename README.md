@@ -171,6 +171,10 @@ You can find your account ID by running `aws sts get-caller-identity`.
 
 ```
 /
+├── .agents/
+│   └── skills/
+│       └── setup-site/
+│           └── SKILL.md         # First-time setup skill for AI agents
 ├── .github/
 │   ├── dependabot.yml           # Dependabot configuration
 │   └── workflows/
@@ -183,6 +187,7 @@ You can find your account ID by running `aws sts get-caller-identity`.
 │   ├── lib/static-site-stack.ts # Infrastructure stack
 │   ├── cdk.json                 # CDK configuration
 │   ├── package.json
+│   ├── package-lock.json
 │   └── tsconfig.json
 ├── .gitignore
 ├── AGENTS.md
