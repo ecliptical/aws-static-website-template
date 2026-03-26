@@ -2,6 +2,14 @@
 
 A starter template for deploying a static website to [AWS](https://aws.amazon.com/) using [S3](https://aws.amazon.com/s3/) and [CloudFront](https://aws.amazon.com/cloudfront/), provisioned with [AWS CDK](https://aws.amazon.com/cdk/) ([TypeScript](https://www.typescriptlang.org/)).
 
+## TL;DR
+
+If you use an AI coding agent such as [GitHub Copilot](https://github.com/features/copilot) or [Claude Code](https://docs.anthropic.com/en/docs/claude-code), you can bootstrap the entire setup — from creating your GitHub repo to deploying the site — with a single prompt. Make sure you have the [prerequisites](#prerequisites) installed first, then try something like:
+
+> I want to create a website called "My Website" using https://github.com/ecliptical/aws-static-website-template as a template. The website should be hosted on https://www.example.com — the domain is managed by Route 53 in hosted zone example.com. The home page should say "Hello, world!" I want to host my code in a private repo at https://github.com/myuser/my-website.
+
+The agent will walk through the [first-time setup workflow](.agents/skills/setup-site/SKILL.md): creating the repo, configuring CDK, deploying the infrastructure, setting up the GitHub Actions secret, and verifying the site is live.
+
 ## Features
 
 - **AWS S3 + CloudFront** for global static site hosting
@@ -166,14 +174,6 @@ You can find your account ID by running `aws sts get-caller-identity`.
 3. **Deploy infrastructure** — `cd infra && npm install && cdk deploy`
 4. **Set GitHub secret** — Run `cd infra && ./setup-github-secret.sh` or manually copy `DeployRoleArn` (see [GitHub Actions Setup](#github-actions-setup))
 5. **Deploy content** — Push to GitHub and run the "Deploy to AWS" action
-
-### Quick Start with an AI Coding Agent
-
-If you use an AI coding agent such as [Claude Code](https://docs.anthropic.com/en/docs/claude-code), you can bootstrap the entire setup — from creating your GitHub repo to deploying the site — with a single prompt. Make sure you have the [prerequisites](#prerequisites) installed first, then try something like:
-
-> I want to create a website using https://github.com/ecliptical/aws-static-website-template as a template. The website should be hosted on https://www.example.com, which is a domain I own. It should consist of a simple home page that says "Hello, world!" I want to host my code in a private repo at https://github.com/myuser/my-website.
-
-The agent will walk through the [first-time setup workflow](.agents/skills/setup-site/SKILL.md): creating the repo, configuring CDK, deploying the infrastructure, setting up the GitHub Actions secret, and verifying the site is live.
 
 ## 📁 Repository Structure
 
