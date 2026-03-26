@@ -1,11 +1,8 @@
-name: Deploy to AWS
+name: CI
 
 on:
-  workflow_dispatch:
-
-concurrency:
-  group: deploy-aws
-  cancel-in-progress: false
+  pull_request:
+    branches: [main]
 
 permissions:
   id-token: write
@@ -15,7 +12,7 @@ env:
   AWS_REGION: us-east-1
 
 jobs:
-  deploy:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,12 +34,6 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy with CDK
+      - name: Synthesize CDK stack
         working-directory: infra
-        run: npx cdk deploy --require-approval never
-
-      - name: Deployment summary
-        run: |
-          echo "## Deployment Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Content deployed via CDK with automatic CloudFront cache invalidation." >> $GITHUB_STEP_SUMMARY
+        run: npx cdk synth

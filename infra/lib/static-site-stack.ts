@@ -126,7 +126,10 @@ export class StaticSiteStack extends cdk.Stack {
               'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
             },
             StringLike: {
-              'token.actions.githubusercontent.com:sub': `repo:${props.githubRepo}:*`,
+              'token.actions.githubusercontent.com:sub': [
+                `repo:${props.githubRepo}:ref:refs/heads/main`,
+                `repo:${props.githubRepo}:pull_request`,
+              ],
             },
           },
         ),
