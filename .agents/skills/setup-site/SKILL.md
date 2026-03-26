@@ -46,6 +46,7 @@ Edit these files with the user's answers:
 - **`infra/cdk.json`** — Set `domainName`, `hostedZoneName`, `certificateArn` in the `context` object. Use empty strings for values that don't apply.
 - **`docs/index.html`** — Update the `<title>`, and replace the React `App` component to render the user's content.
 - **`docs/favicon.svg`** — Replace if the user provides a custom icon.
+- **`README.md`** — Replace the template README with a personalized version for this site: site name as heading, brief description, live URL, simplified deploy instructions, repo structure, and a link back to the [template repo](https://github.com/ecliptical/aws-static-website-template) for reference.
 
 ### 4. Create GitHub Repository
 

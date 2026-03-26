@@ -152,12 +152,20 @@ Edit `infra/cdk.json` and set the `context` values:
 
 Leave values as empty strings (`""`) if not applicable — the CDK app treats empty strings as undefined.
 
-### Step 4: Customize Site Content
+### Step 4: Customize Site Content and README
 
-Update `docs/index.html` with the user's desired content:  
-- Set the `<title>` tag  
-- Update the React `App` component to render the user's content  
-- Update `docs/favicon.svg` if the user provides a custom icon  
+Update `docs/index.html` with the user's desired content:
+- Set the `<title>` tag
+- Update the React `App` component to render the user's content
+- Update `docs/favicon.svg` if the user provides a custom icon
+
+Replace `README.md` with a personalized version for this specific site. The template README contains generic setup instructions that aren't relevant once the site is configured. The new README should include:
+- The site name/title as the heading
+- A brief description of what the site is
+- A link to the live URL (once known — can be updated after deploy)
+- Simplified deployment instructions (GitHub Actions and CLI)
+- A brief repository structure overview
+- A link back to the [template repository](https://github.com/ecliptical/aws-static-website-template) for full documentation
 
 ### Step 5: Create GitHub Repository
 
