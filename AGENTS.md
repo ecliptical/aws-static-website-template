@@ -56,6 +56,7 @@ Settings are in `infra/cdk.json` context:
 ├── .github/
 │   ├── dependabot.yml               # Dependabot configuration
 │   └── workflows/
+│       ├── ci.yml                   # CI checks on pull requests
 │       └── deploy-aws.yml           # GitHub Action for content deployment
 ├── docs/                            # Website content (deployed to S3)
 │   ├── favicon.svg                  # Site favicon
@@ -96,10 +97,14 @@ Settings are in `infra/cdk.json` context:
    ```
 
 ### GitHub Actions
+- **CI** (`ci.yml`): Runs on pull requests targeting `main` — installs dependencies and runs `cdk synth` to validate infrastructure
+  - Uses OIDC federation for AWS authentication (required for Route 53 hosted zone lookups during synth)
+  - Secret: `AWS_ROLE_ARN`
 - **Deploy to AWS** (`deploy-aws.yml`): Manual workflow that runs `cdk deploy` to deploy content and infrastructure
   - Uses OIDC federation for secure, secretless AWS authentication
   - Secret: `AWS_ROLE_ARN`
   - CDK `BucketDeployment` handles S3 sync and CloudFront cache invalidation automatically
+  - Concurrency control prevents overlapping deployments
 
 ## First-Time Setup Workflow
 

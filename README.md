@@ -178,6 +178,7 @@ You can find your account ID by running `aws sts get-caller-identity`.
 ├── .github/
 │   ├── dependabot.yml           # Dependabot configuration
 │   └── workflows/
+│       ├── ci.yml                   # CI checks on pull requests
 │       └── deploy-aws.yml       # GitHub Action for content deployment
 ├── docs/                        # Website content (deployed to S3)
 │   ├── favicon.svg              # Site favicon
