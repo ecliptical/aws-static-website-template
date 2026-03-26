@@ -19,6 +19,8 @@ Run and verify each succeeds:
 ```bash
 node --version               # v18+
 cdk --version                # AWS CDK CLI installed
+gh --version                 # GitHub CLI installed
+gh auth status               # GitHub CLI authenticated
 aws sts get-caller-identity  # AWS credentials configured
 ```
 
@@ -26,7 +28,7 @@ If any fail, point the user to the **Prerequisites** section in [README.md](../.
 
 ### 2. Ask the User
 
-Gather this information — do not guess or assume defaults:
+Gather this information (some may already have been provided in the initial prompt) — do not guess or assume defaults:
 
 | Question | Used for | Required |
 |----------|----------|----------|
@@ -35,6 +37,7 @@ Gather this information — do not guess or assume defaults:
 | Custom domain name | `domainName` in `infra/cdk.json` | No |
 | Route 53 hosted zone | `hostedZoneName` in `infra/cdk.json` (only if custom domain) | No |
 | ACM certificate ARN | `certificateArn` in `infra/cdk.json` (only if custom domain without Route 53) | No |
+| GitHub repository | Where to host the code (e.g., `myuser/my-website`), public or private | Yes |
 
 ### 3. Apply Configuration
 
@@ -43,18 +46,34 @@ Edit these files with the user's answers:
 - **`infra/cdk.json`** — Set `domainName`, `hostedZoneName`, `certificateArn` in the `context` object. Use empty strings for values that don't apply.
 - **`docs/index.html`** — Update the `<title>`, and replace the React `App` component to render the user's content.
 - **`docs/favicon.svg`** — Replace if the user provides a custom icon.
+- **`README.md`** — Replace the template README with a personalized version for this site: site name as heading, brief description, live URL, simplified deploy instructions, repo structure, and a link back to the [template repo](https://github.com/ecliptical/aws-static-website-template) for reference.
 
-### 4. Deploy
+### 4. Create GitHub Repository
+
+Create the repo if it doesn't exist (use `--private` or `--public` as the user requests):
+
+```bash
+gh repo create <owner>/<repo> --private --source=. --push
+```
+
+Make sure the default branch is named `main` (rename from `master` if needed):
+
+```bash
+git branch -m master main
+```
+
+### 5. Bootstrap CDK and Deploy
 
 ```bash
 cd infra
 npm install
+cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/us-east-1
 cdk deploy
 ```
 
 Capture and display the stack outputs to the user.
 
-### 5. Configure GitHub Actions
+### 6. Configure GitHub Actions
 
 If `DeployRoleArn` appears in the outputs:
 
@@ -64,6 +83,16 @@ cd infra && ./setup-github-secret.sh
 
 This sets the `AWS_ROLE_ARN` GitHub repository secret needed by the deploy workflow.
 
-### 6. Verify
+### 7. Commit and Push
+
+Commit any changes made during setup and push:
+
+```bash
+git add -A
+git commit -m "Configure site for deployment"
+git push
+```
+
+### 8. Verify
 
 Open the site URL from the stack outputs (`DistributionDomainName` or `SiteUrl`) and confirm it loads.
