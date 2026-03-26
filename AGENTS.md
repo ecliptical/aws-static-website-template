@@ -117,6 +117,8 @@ Run each command and confirm it succeeds before continuing:
 ```bash
 node --version          # must be v18+
 cdk --version           # AWS CDK CLI must be installed
+gh --version            # GitHub CLI must be installed
+gh auth status          # must be authenticated
 aws sts get-caller-identity  # must return a valid account (confirms AWS CLI is configured)
 ```
 
@@ -124,7 +126,7 @@ If any check fails, refer the user to the Prerequisites section of the README.
 
 ### Step 2: Gather User Configuration
 
-Ask the user:
+Ask the user (some or all of these may already have been provided in the initial prompt):
 
 1. **Site title** — What should the website be called? *(used to update `docs/index.html` `<title>` and heading)*
 2. **Custom domain** *(optional)* — Do you want a custom domain? If yes:
@@ -132,6 +134,7 @@ Ask the user:
    - Is the domain managed by Route 53? If yes: what is the hosted zone name? (e.g., `example.com`)
    - If not Route 53: do you have an existing ACM certificate ARN?
 3. **Site content** — What content should the landing page display? *(use this to populate `docs/index.html`)*
+4. **GitHub repository** — Where should the code be hosted? (e.g., `myuser/my-website`). Should it be public or private?
 
 ### Step 3: Configure CDK
 
@@ -156,17 +159,41 @@ Update `docs/index.html` with the user's desired content:
 - Update the React `App` component to render the user's content  
 - Update `docs/favicon.svg` if the user provides a custom icon  
 
-### Step 5: Install Dependencies and Deploy
+### Step 5: Create GitHub Repository
+
+If the user's GitHub repository doesn't already exist, create it:
+
+```bash
+# Create the repo (use --private or --public as requested by the user)
+gh repo create <owner>/<repo> --private --source=. --push
+```
+
+If the repo already exists, add it as a remote and push:
+
+```bash
+git remote add origin https://github.com/<owner>/<repo>.git
+git push -u origin main
+```
+
+> **Important:** The CI workflow (`.github/workflows/ci.yml`) triggers on pull requests to `main`. Make sure the default branch is named `main`. If `git init` created a `master` branch, rename it:
+> ```bash
+> git branch -m master main
+> ```
+
+### Step 6: Bootstrap CDK and Deploy
+
+CDK requires a one-time bootstrap per AWS account/region. Check if it's already done and bootstrap if needed:
 
 ```bash
 cd infra
 npm install
+cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/us-east-1
 cdk deploy
 ```
 
 Wait for the deploy to complete. Capture the stack outputs — they are printed at the end.
 
-### Step 6: Set Up GitHub Actions Secret
+### Step 7: Set Up GitHub Actions Secret
 
 If the stack output includes `DeployRoleArn` (it will when the repo is on GitHub):
 
@@ -174,11 +201,27 @@ If the stack output includes `DeployRoleArn` (it will when the repo is on GitHub
 cd infra && ./setup-github-secret.sh
 ```
 
-Alternatively, tell the user to manually set the `AWS_ROLE_ARN` GitHub repository secret.
+Alternatively, set the secret directly:
 
-### Step 7: Verify Deployment
+```bash
+gh secret set AWS_ROLE_ARN --repo <owner>/<repo> --body "<DeployRoleArn value>"
+```
+
+### Step 8: Commit and Push
+
+Commit any changes made during setup (e.g., `cdk.json` configuration, `cdk.context.json`, content updates) and push:
+
+```bash
+git add -A
+git commit -m "Configure site for deployment"
+git push
+```
+
+### Step 9: Verify Deployment
 
 Open the `DistributionDomainName` URL (or `SiteUrl` if a custom domain was configured) in a browser and confirm the site loads correctly.
+
+> **Note:** CloudFront distributions can take a few minutes to fully propagate. If the custom domain doesn't resolve immediately, wait a moment and try again.
 
 ### Troubleshooting
 
@@ -186,7 +229,9 @@ Open the `DistributionDomainName` URL (or `SiteUrl` if a custom domain was confi
 |---------|-------------|-----|
 | `cdk deploy` fails with "Need to perform AWS calls" | AWS CLI not configured | Run `aws configure` |
 | `cdk deploy` fails with "Has the environment been bootstrapped?" | CDK bootstrap not done | Run `cdk bootstrap aws://ACCOUNT-ID/us-east-1` |
+| `cdk synth` fails with TS2591 "Cannot find name 'process'" | `@types/node` not resolved by TypeScript | Add `"types": ["node"]` to `compilerOptions` in `infra/tsconfig.json` |
 | `DeployRoleArn` not in outputs | Repo not on GitHub / no `origin` remote | Push to GitHub first, then redeploy |
+| CI workflow never runs on PRs | Default branch is `master`, not `main` | Rename with `git branch -m master main && git push -u origin main` |
 | Certificate validation stuck | DNS not delegated to Route 53 | Check NS records at registrar match Route 53 hosted zone |
 | Site shows old content after deploy | Browser cache | Hard-refresh or wait a few minutes for CloudFront edge propagation |
 
