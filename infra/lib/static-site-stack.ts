@@ -21,6 +21,11 @@ export class StaticSiteStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: StaticSiteStackProps = {}) {
     super(scope, id, props);
 
+    // Tag all resources with the project repository name
+    if (props.githubRepo) {
+      cdk.Tags.of(this).add('project', props.githubRepo);
+    }
+
     // S3 bucket for website content
     const siteBucket = new s3.Bucket(this, 'SiteBucket', {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
