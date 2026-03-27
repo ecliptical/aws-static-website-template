@@ -21,6 +21,9 @@ The CDK stack (`infra/lib/static-site-stack.ts`) provisions:
 - **S3 Bucket**: Private bucket (block all public access, S3-managed encryption, RETAIN on delete)
 - **CloudFront Distribution**: OAC-based S3 origin, HTTPS redirect, default root object `index.html`
 
+### Created When GitHub Repo Is Detected
+- **Resource Tags**: All resources are tagged with `project: <owner>/<repo>` (derived from the `origin` Git remote)
+
 ### Created When `domainName` + `hostedZoneName` Are Set
 - **ACM Certificate**: DNS-validated via Route 53
 - **Route 53 Records**: A and AAAA alias records pointing to CloudFront
@@ -28,7 +31,7 @@ The CDK stack (`infra/lib/static-site-stack.ts`) provisions:
 ### Created When `domainName` + `certificateArn` Are Set
 - CloudFront configured with the custom domain and pre-existing certificate
 
-### Created When GitHub Repo Is Detected
+### Also Created When GitHub Repo Is Detected
 The GitHub repo (`owner/repo`) is auto-detected from the `origin` Git remote at synth time.
 - **GitHub OIDC Provider**: For secretless GitHub Actions authentication
 - **IAM Deploy Role**: Grants permission to assume CDK bootstrap roles for deployment

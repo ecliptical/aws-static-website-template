@@ -237,6 +237,8 @@ cdk deploy
 
 The stack is deployed to **us-east-1** (required for CloudFront + ACM certificate integration). S3 content is served globally via CloudFront regardless of bucket region.
 
+When a GitHub remote is detected, all resources in the stack are tagged with `project: <owner>/<repo>` (e.g., `project: myuser/my-website`) for easy identification in the AWS console.
+
 CDK will output the values needed for GitHub Actions:
 
 | CDK Output | Set in GitHub as |
